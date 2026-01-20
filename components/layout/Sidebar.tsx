@@ -22,6 +22,11 @@ export default function Sidebar({ isOpen }: SidebarProps) {
       href: "/projects",
       icon: FiFolder,
     },
+    {
+      label: "board",
+      href: "/board",
+      icon: FiFolder,
+    }
   ];
 
   return (
