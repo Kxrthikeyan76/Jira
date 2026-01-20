@@ -16,6 +16,15 @@ import {
   FaUser,
   FaCalendarAlt
 } from "react-icons/fa";
+import {
+  Button,
+  Heading,
+  Text,
+  Card,
+  Input,
+  Badge,
+  Container
+} from "@/components/ui";
 
 type Project = {
   id: number;
@@ -32,44 +41,9 @@ type Project = {
 
 export default function ProjectsPage() {
   const router = useRouter();
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: 1,
-      name: "Website Redesign",
-      key: "WEB",
-      description: "Complete overhaul of company website with modern design",
-      progress: 65,
-      issues: 42,
-      openIssues: 12,
-      lead: { name: "Alex Johnson", avatar: "AJ" },
-      lastUpdated: "2 hours ago",
-      color: "bg-blue-500"
-    },
-    {
-      id: 2,
-      name: "Mobile App",
-      key: "MOB",
-      description: "Development of cross-platform mobile application",
-      progress: 40,
-      issues: 89,
-      openIssues: 24,
-      lead: { name: "Maria Garcia", avatar: "MG" },
-      lastUpdated: "1 day ago",
-      color: "bg-purple-500"
-    },
-    {
-      id: 3,
-      name: "API Migration",
-      key: "API",
-      description: "Migrate legacy API to GraphQL with improved performance",
-      progress: 85,
-      issues: 56,
-      openIssues: 8,
-      lead: { name: "Sam Wilson", avatar: "SW" },
-      lastUpdated: "3 hours ago",
-      color: "bg-green-500"
-    },
-  ]);
+  
+ 
+  const [projects, setProjects] = useState<Project[]>([]);
   
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -80,7 +54,6 @@ export default function ProjectsPage() {
   const [key, setKey] = useState("");
   const [description, setDescription] = useState("");
 
-  // Calculate stats
   useEffect(() => {
     setStats({
       total: projects.length,
@@ -102,6 +75,21 @@ export default function ProjectsPage() {
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
+  const getCurrentUser = () => {
+   
+    return { name: "You", avatar: "ME" };
+  };
+
+  const getRandomProgress = () => {
+    
+    return Math.floor(Math.random() * 30);
+  };
+
+  const getRandomIssues = () => {
+   
+    return Math.floor(Math.random() * 10);
+  };
+
   const resetForm = () => {
     setName("");
     setKey("");
@@ -112,34 +100,39 @@ export default function ProjectsPage() {
   const handleSave = () => {
     if (!name || !key) return;
 
+    const currentUser = getCurrentUser();
+    const now = new Date();
+    const timeAgo = "Just now";
+
     if (editingId !== null) {
+     
       setProjects((prev) =>
         prev.map((p) =>
           p.id === editingId ? { 
             ...p, 
             name, 
-            key, 
+            key: key.toUpperCase(), 
             description,
-            lastUpdated: "Just now"
+            lastUpdated: timeAgo
           } : p
         )
       );
     } else {
-      setProjects((prev) => [
-        ...prev,
-        { 
-          id: Date.now(), 
-          name, 
-          key, 
-          description,
-          progress: 0,
-          issues: 0,
-          openIssues: 0,
-          lead: { name: "You", avatar: "ME" },
-          lastUpdated: "Just now",
-          color: getRandomColor()
-        },
-      ]);
+      
+      const newProject: Project = {
+        id: Date.now(),
+        name,
+        key: key.toUpperCase(),
+        description,
+        progress: getRandomProgress(), 
+        issues: getRandomIssues(), 
+        openIssues: Math.floor(Math.random() * 5), 
+        lead: currentUser,
+        lastUpdated: timeAgo,
+        color: getRandomColor()
+      };
+
+      setProjects((prev) => [...prev, newProject]);
     }
 
     resetForm();
@@ -175,10 +168,9 @@ export default function ProjectsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
+      <Container size="xl">
         
-        
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 mb-8">
+        <Card padding="lg" className="mb-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
               <div className="flex items-center gap-3">
@@ -186,75 +178,82 @@ export default function ProjectsPage() {
                   <FaFolder className="text-2xl text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
-                    Projects
-                  </h1>
-                  <p className="text-gray-600 mt-1">
-                    Manage all organization projects and track progress
-                  </p>
+                  <Heading level={1}>Projects</Heading>
+                  <Text variant="muted" size="sm">
+                    {projects.length === 0 
+                      ? "Create your first project to get started" 
+                      : `Manage ${projects.length} organization projects`}
+                  </Text>
                 </div>
               </div>
             </div>
 
-            <button
+            <Button
               onClick={() => {
                 resetForm();
                 setShowForm(true);
               }}
-              className="group relative px-6 py-3.5 bg-blue-600 text-white font-semibold rounded-xl shadow-sm hover:shadow-md hover:bg-blue-700 transition-all duration-200 flex items-center gap-2"
+              variant="primary"
+              size="lg"
+              leftIcon={<FaPlus className="text-xl" />}
             >
-              <FaPlus className="text-xl" />
-              <span>Create Project</span>
-            </button>
+              Create Project
+            </Button>
           </div>
 
          
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
             {[
-              { label: "Total Projects", value: stats.total, icon: <FaFolder className="text-2xl" />, color: "bg-blue-100 text-blue-600" },
-              { label: "Active", value: stats.active, icon: <FaSync className="text-2xl" />, color: "bg-green-100 text-green-600" },
-              { label: "Total Issues", value: stats.issues, icon: <FaTasks className="text-2xl" />, color: "bg-purple-100 text-purple-600" },
-              { label: "Open Issues", value: stats.open, icon: <FaExclamationTriangle className="text-2xl" />, color: "bg-orange-100 text-orange-600" },
+              { label: "Total Projects", value: stats.total, icon: <FaFolder className="text-2xl" />, color: "blue" },
+              { label: "Active", value: stats.active, icon: <FaSync className="text-2xl" />, color: "green" },
+              { label: "Total Issues", value: stats.issues, icon: <FaTasks className="text-2xl" />, color: "purple" },
+              { label: "Open Issues", value: stats.open, icon: <FaExclamationTriangle className="text-2xl" />, color: "orange" },
             ].map((stat, index) => (
-              <div 
+              <Card 
                 key={index}
-                className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-sm transition-shadow duration-200"
+                padding="md"
+                hoverable
+                className="border-0"
               >
                 <div className="flex items-center justify-between">
-                  <div className={`w-12 h-12 rounded-lg ${stat.color.split(' ')[0]} flex items-center justify-center`}>
+                  <Badge color={stat.color as any} className="!px-4 !py-3">
                     {stat.icon}
-                  </div>
+                  </Badge>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                    <div className="text-sm text-gray-600">{stat.label}</div>
+                    <Heading level={3} className="text-gray-900">
+                      {stat.value}
+                    </Heading>
+                    <Text variant="muted" size="sm">
+                      {stat.label}
+                    </Text>
                   </div>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
 
-          
+         
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FaSearch className="h-5 w-5 text-gray-400" />
               </div>
-              <input
+              <Input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search projects by name, key, or description..."
-                className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                className="pl-10"
               />
             </div>
           </div>
-        </div>
+        </Card>
 
         
         {showForm && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 mb-8">
+          <Card padding="lg" className="mb-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <Heading level={2} className="flex items-center gap-2">
                 {editingId ? (
                   <>
                     <FaEdit className="text-blue-600" />
@@ -266,54 +265,56 @@ export default function ProjectsPage() {
                     Create New Project
                   </>
                 )}
-              </h2>
-              <button
+              </Heading>
+              <Button
                 onClick={() => {
                   resetForm();
                   setShowForm(false);
                 }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                variant="ghost"
+                size="sm"
+                className="p-2"
               >
                 <FaTimes className="w-6 h-6 text-gray-500" />
-              </button>
+              </Button>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Text size="sm" className="font-medium text-gray-700 mb-2">
                     Project Name
-                  </label>
-                  <input
+                  </Text>
+                  <Input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Website Revamp"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    placeholder="e.g., Website Redesign"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Text size="sm" className="font-medium text-gray-700 mb-2">
                     Project Key
-                  </label>
-                  <input
+                  </Text>
+                  <Input
                     value={key}
-                    onChange={(e) => setKey(e.target.value.toUpperCase())}
-                    placeholder="WEB"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    onChange={(e) => setKey(e.target.value)}
+                    placeholder="e.g., WEB"
                   />
-                  <p className="text-xs text-gray-500 mt-2">Unique identifier for your project</p>
+                  <Text variant="muted" size="xs" className="mt-2">
+                    Short unique code (2-4 letters)
+                  </Text>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Text size="sm" className="font-medium text-gray-700 mb-2">
                   Description
-                </label>
+                </Text>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Describe your project goals, scope, and objectives..."
+                  placeholder="Describe what this project is about..."
                   rows={4}
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                 />
@@ -321,41 +322,39 @@ export default function ProjectsPage() {
             </div>
 
             <div className="flex gap-4 mt-8">
-              <button
+              <Button
                 onClick={handleSave}
                 disabled={!name || !key}
-                className={`px-8 py-3 font-semibold rounded-lg transition flex items-center gap-2
-                  ${
-                    !name || !key
-                      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                      : "bg-green-600 text-white hover:bg-green-700"
-                  }`}
+                variant={!name || !key ? "secondary" : "primary"}
+                size="lg"
+                leftIcon={<FaCheck className="w-5 h-5" />}
               >
-                <span>{editingId ? "Update" : "Create"}</span>
-                <FaCheck className="w-5 h-5" />
-              </button>
+                {editingId ? "Update Project" : "Create Project"}
+              </Button>
 
-              <button
+              <Button
                 onClick={() => {
                   resetForm();
                   setShowForm(false);
                 }}
-                className="px-8 py-3 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition flex items-center gap-2"
+                variant="secondary"
+                size="lg"
+                leftIcon={<FaTimes className="w-5 h-5" />}
               >
-                <span>Cancel</span>
-                <FaTimes className="w-5 h-5" />
-              </button>
+                Cancel
+              </Button>
             </div>
-          </div>
+          </Card>
         )}
 
-        {/* Projects Grid */}
+        
         {filteredProjects.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProjects.map((project) => (
-              <div
+              <Card
                 key={project.id}
-                className="group relative bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-md transition-all duration-200 overflow-hidden"
+                hoverable
+                className="relative overflow-hidden group"
               >
                
                 <div className={`absolute top-0 right-0 ${project.color} text-white px-4 py-1.5 rounded-bl-xl rounded-tr-2xl text-sm font-bold`}>
@@ -365,20 +364,31 @@ export default function ProjectsPage() {
                 <div className="relative">
                   
                   <div className="mb-4">
-                    <h3 
+                    <div 
                       onClick={() => handleProjectClick(project.id)}
-                      className="text-xl font-bold text-gray-900 mb-2 hover:text-blue-600 cursor-pointer transition-colors"
+                      className="cursor-pointer"
                     >
-                      {project.name}
-                    </h3>
-                    <p className="text-gray-600 text-sm line-clamp-2">{project.description}</p>
+                      <Heading 
+                        level={3}
+                        className="mb-2 hover:text-blue-600 transition-colors"
+                      >
+                        {project.name}
+                      </Heading>
+                    </div>
+                    <Text variant="muted" size="sm" className="line-clamp-2">
+                      {project.description}
+                    </Text>
                   </div>
 
                  
                   <div className="mb-6">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700">Progress</span>
-                      <span className="text-sm font-bold text-gray-900">{project.progress}%</span>
+                      <Text size="sm" className="font-medium text-gray-700">
+                        Progress
+                      </Text>
+                      <Text size="sm" className="font-bold text-gray-900">
+                        {project.progress}%
+                      </Text>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div 
@@ -388,72 +398,94 @@ export default function ProjectsPage() {
                     </div>
                   </div>
 
-                  {/* Stats */}
+                  
                   <div className="grid grid-cols-3 gap-2 mb-6">
                     <div className="text-center p-2 bg-blue-50 rounded-lg">
-                      <div className="text-lg font-bold text-blue-600">{project.issues}</div>
-                      <div className="text-xs text-gray-600">Issues</div>
+                      <Text size="lg" className="font-bold text-blue-600">
+                        {project.issues}
+                      </Text>
+                      <Text variant="muted" size="xs">
+                        Issues
+                      </Text>
                     </div>
                     <div className="text-center p-2 bg-orange-50 rounded-lg">
-                      <div className="text-lg font-bold text-orange-600">{project.openIssues}</div>
-                      <div className="text-xs text-gray-600">Open</div>
+                      <Text size="lg" className="font-bold text-orange-600">
+                        {project.openIssues}
+                      </Text>
+                      <Text variant="muted" size="xs">
+                        Open
+                      </Text>
                     </div>
                     <div className="text-center p-2 bg-green-50 rounded-lg">
-                      <div className="text-lg font-bold text-green-600">{project.issues - project.openIssues}</div>
-                      <div className="text-xs text-gray-600">Resolved</div>
+                      <Text size="lg" className="font-bold text-green-600">
+                        {project.issues - project.openIssues}
+                      </Text>
+                      <Text variant="muted" size="xs">
+                        Resolved
+                      </Text>
                     </div>
                   </div>
 
-                  {/* Footer with Actions */}
+                  
                   <div className="relative flex items-center justify-between pt-4 border-t border-gray-200">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 font-bold">
-                        <FaUser className="text-sm" />
+                        {project.lead.avatar}
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{project.lead.name}</div>
-                        <div className="text-xs text-gray-500">Project Lead</div>
+                        <Text size="sm" className="font-medium text-gray-900">
+                          {project.lead.name}
+                        </Text>
+                        <Text variant="muted" size="xs">
+                          Project Lead
+                        </Text>
                       </div>
                     </div>
                     
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1 text-xs text-gray-500">
-                        <FaCalendarAlt className="w-3 h-3" />
-                        <span>Updated {project.lastUpdated}</span>
+                      <div className="flex items-center gap-1">
+                        <FaCalendarAlt className="w-3 h-3 text-gray-400" />
+                        <Text variant="muted" size="xs">
+                          {project.lastUpdated}
+                        </Text>
                       </div>
                       
-                      {/* Action Buttons - Bottom Right */}
+                      
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <button
+                        <Button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleEdit(project);
                           }}
-                          className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                          variant="ghost"
+                          size="sm"
+                          className="p-2"
                           title="Edit project"
                         >
                           <FaEdit className="w-4 h-4" />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDelete(project);
                           }}
-                          className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                          variant="danger"
+                          size="sm"
+                          className="p-2"
                           title="Delete project"
                         >
                           <FaTrash className="w-4 h-4" />
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         ) : (
-          /* Empty State */
-          <div className="flex flex-col items-center justify-center py-20">
+          
+          <Card className="flex flex-col items-center justify-center py-20">
             <div className="relative">
               <div className="w-48 h-48 rounded-full bg-gray-100 flex items-center justify-center mb-8">
                 <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center">
@@ -461,27 +493,28 @@ export default function ProjectsPage() {
                 </div>
               </div>
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <Heading level={2} className="text-gray-900 mb-4 text-center">
               {searchTerm ? "No projects found" : "No projects yet"}
-            </h2>
-            <p className="text-gray-600 text-center max-w-md mb-8">
+            </Heading>
+            <Text variant="muted" className="text-center max-w-md mb-8">
               {searchTerm 
                 ? "Try different keywords or create a new project."
-                : "Start your journey by creating your first project!"}
-            </p>
-            <button
+                : "Start by creating your first project to organize your work!"}
+            </Text>
+            <Button
               onClick={() => {
                 resetForm();
                 setShowForm(true);
               }}
-              className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition flex items-center gap-2"
+              variant="primary"
+              size="lg"
+              leftIcon={<FaPlus />}
             >
-              <FaPlus />
-              <span>Create Your First Project</span>
-            </button>
-          </div>
+              Create Your First Project
+            </Button>
+          </Card>
         )}
-      </div>
+      </Container>
     </div>
   );
 }

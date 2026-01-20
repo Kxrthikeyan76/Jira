@@ -2,6 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  Button,
+  Heading,
+  Text,
+  Card,
+  Input,
+  Container
+} from "@/components/ui";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,7 +26,7 @@ export default function LoginPage() {
 
     setTimeout(() => {
       if (email && password) {
-        console.log("Jira login successful:", { email, rememberMe });
+        console.log("Login successful:", { email, rememberMe });
         router.push("/dashboard"); 
       } else {
         setError("Please enter both email and password");
@@ -31,7 +39,6 @@ export default function LoginPage() {
     setIsLoading(true);
     setError("");
     
-    
     setTimeout(() => {
       console.log("Microsoft SSO initiated");
       router.push("/dashboard"); 
@@ -40,33 +47,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5] p-4">
-      
-    
-      <div className="w-full max-w-[400px]">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <Container size="sm">
         
-       
         <div className="text-center mb-10">
           <div className="flex items-center justify-center mb-6">
-            <div>
-              <span className="text-3xl font-bold text-gray-900 tracking-tight">
-                Trackflow
-              </span>
+            <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg mb-4">
+              <span className="text-3xl font-bold text-white">T</span>
             </div>
           </div>
 
-          <h1 className="text-2xl font-semibold text-gray-900 mb-3">
+          <Heading level={1} className="text-gray-900 mb-3">
             Log in to Trackflow
-          </h1>
-          <p className="text-sm text-gray-600">
+          </Heading>
+          <Text variant="muted" className="text-center">
             Enter your details to access your projects and issues
-          </p>
+          </Text>
         </div>
 
-        
-        <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-8">
+       
+        <Card className="p-8">
           
-         
           {error && (
             <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
               ⚠️ {error}
@@ -74,57 +75,57 @@ export default function LoginPage() {
           )}
 
           
-          <button
+          <Button
             onClick={handleMicrosoftLogin}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-md py-3 px-4 hover:bg-gray-50 transition-all duration-200 mb-6 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.99]"
+            variant="secondary"
+            size="lg"
+            fullWidth
+            leftIcon={
+              <svg className="w-5 h-5" viewBox="0 0 23 23" fill="none">
+                <path d="M11.5 1L1 5.5V11.5H11.5V1Z" fill="#F1511B" />
+                <path d="M22 5.5L11.5 1V11.5H22V5.5Z" fill="#80CC28" />
+                <path d="M1 11.5V17.5L11.5 22V11.5H1Z" fill="#00ADEF" />
+                <path d="M11.5 22L22 17.5V11.5H11.5V22Z" fill="#FBBC09" />
+              </svg>
+            }
+            className="mb-6"
           >
-            <svg className="w-5 h-5" viewBox="0 0 23 23" fill="none">
-              <path d="M11.5 1L1 5.5V11.5H11.5V1Z" fill="#F1511B" />
-              <path d="M22 5.5L11.5 1V11.5H22V5.5Z" fill="#80CC28" />
-              <path d="M1 11.5V17.5L11.5 22V11.5H1Z" fill="#00ADEF" />
-              <path d="M11.5 22L22 17.5V11.5H11.5V22Z" fill="#FBBC09" />
-            </svg>
-            <span className="text-sm font-medium text-gray-700">
-              {isLoading ? "Connecting..." : "Continue with Microsoft"}
-            </span>
-          </button>
+            {isLoading ? "Connecting..." : "Continue with Microsoft"}
+          </Button>
 
-          
+         
           <div className="relative mb-8">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300"></div>
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-3 bg-white text-gray-500">Or continue with</span>
+            <div className="relative flex justify-center">
+              <Text variant="muted" size="sm" className="bg-white px-3">
+                Or continue with
+              </Text>
             </div>
           </div>
 
-          
+         
           <form onSubmit={handleEmailLogin} className="space-y-5">
-            
-           
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Text size="sm" className="font-medium text-gray-700 mb-2">
                 Email address
-              </label>
-              <input
+              </Text>
+              <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@company.com"
-                className="w-full px-3 py-2.5 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm disabled:bg-gray-100"
-                required
                 disabled={isLoading}
               />
             </div>
 
-            
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
+                <Text size="sm" className="font-medium text-gray-700">
                   Password
-                </label>
+                </Text>
                 <button
                   type="button"
                   className="text-sm text-blue-600 hover:text-blue-800 hover:underline focus:outline-none"
@@ -133,18 +134,15 @@ export default function LoginPage() {
                   Forgot password?
                 </button>
               </div>
-              <input
+              <Input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="w-full px-3 py-2.5 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm disabled:bg-gray-100"
-                required
                 disabled={isLoading}
               />
             </div>
 
-            
             <div className="flex items-center">
               <input
                 type="checkbox"
@@ -159,15 +157,13 @@ export default function LoginPage() {
               </label>
             </div>
 
-            
-            <button
+            <Button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-2.5 rounded text-sm font-medium transition-all duration-200 ${
-                isLoading
-                  ? "bg-blue-400 cursor-not-allowed"
-                  : "bg-[#0052CC] hover:bg-[#0041A8] active:bg-[#00307D]"
-              } text-white shadow-sm hover:shadow disabled:shadow-none`}
+              variant="primary"
+              size="lg"
+              fullWidth
+              className="mt-4"
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">
@@ -180,12 +176,12 @@ export default function LoginPage() {
               ) : (
                 "Sign in to Trackflow"
               )}
-            </button>
+            </Button>
           </form>
 
-          
+         
           <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-center text-sm text-gray-600">
+            <Text size="sm" className="text-center text-gray-600">
               New to Trackflow?{" "}
               <button
                 onClick={() => console.log("Sign up clicked")}
@@ -193,48 +189,48 @@ export default function LoginPage() {
               >
                 Create an account
               </button>
-            </p>
+            </Text>
           </div>
-        </div>
+        </Card>
 
         
         <div className="mt-8 text-center">
           <div className="flex flex-wrap justify-center gap-4 mb-4">
-            <a href="#" className="text-xs text-gray-500 hover:text-gray-700 hover:underline">
-              Privacy policy
-            </a>
-            <a href="#" className="text-xs text-gray-500 hover:text-gray-700 hover:underline">
-              User notice
-            </a>
-            <a href="#" className="text-xs text-gray-500 hover:text-gray-700 hover:underline">
-              Terms
-            </a>
-            <a href="#" className="text-xs text-gray-500 hover:text-gray-700 hover:underline">
-              Cookies
-            </a>
-            <a href="#" className="text-xs text-gray-500 hover:text-gray-700 hover:underline">
-              Help
-            </a>
+            {["Privacy policy", "User notice", "Terms", "Cookies", "Help"].map((item) => (
+              <button
+                key={item}
+                onClick={() => console.log(`${item} clicked`)}
+                className="text-xs text-gray-500 hover:text-gray-700 hover:underline"
+              >
+                {item}
+              </button>
+            ))}
           </div>
           
-          
-          <p className="text-xs text-gray-400">
+        
+          <Text size="xs" variant="muted" className="mb-2">
             This site is protected by reCAPTCHA and the Google{" "}
-            <a href="#" className="text-blue-600 hover:underline">
+            <button
+              onClick={() => console.log("Privacy Policy clicked")}
+              className="text-blue-600 hover:underline"
+            >
               Privacy Policy
-            </a>{" "}
+            </button>{" "}
             and{" "}
-            <a href="#" className="text-blue-600 hover:underline">
+            <button
+              onClick={() => console.log("Terms of Service clicked")}
+              className="text-blue-600 hover:underline"
+            >
               Terms of Service
-            </a>{" "}
+            </button>{" "}
             apply.
-          </p>
+          </Text>
           
-          <p className="text-xs text-gray-400 mt-2">
-            © {new Date().getFullYear()} Atlassian. All rights reserved.
-          </p>
+          <Text size="xs" variant="muted">
+            © {new Date().getFullYear()} Trackflow. All rights reserved.
+          </Text>
         </div>
-      </div>
+      </Container>
     </div>
   );
 }
