@@ -1,7 +1,7 @@
 // app/(app)/users/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import { 
   FaUser, 
   FaUserPlus, 
@@ -15,15 +15,18 @@ import {
   FaCheck,
   FaTimes,
   FaPhone,
-  FaGlobe,
   FaUsers,
   FaUserCheck,
   FaUserTimes,
-  FaBuilding
+  FaBuilding,
+  FaCamera,
+  FaImage,
+  FaUpload,
+  FaTimesCircle
 } from "react-icons/fa";
 import { Button, Card, Input, Container, Heading, Text, Badge } from "@/components/ui";
 
-// Simple type definition
+// Updated type definition with profile photo
 type User = {
   id: number;
   name: string;
@@ -34,18 +37,21 @@ type User = {
   phone: string;
   joinDate: string;
   status: "active" | "inactive";
+  profilePhoto?: string; // Add profile photo URL/Base64
 };
 
 export default function UsersPage() {
-  // Initial mock data
+  
   const [users, setUsers] = useState<User[]>([
+
   ]);
 
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Form state
+  // Form state with profile photo
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -53,13 +59,11 @@ export default function UsersPage() {
     department: "",
     location: "",
     phone: "",
-    status: "active" as "active" | "inactive"
+    profilePhoto: "", // Store as base64 string or URL
   });
 
-  // Stats
-  const totalUsers = users.length;
-  const activeUsers = users.filter(user => user.status === "active").length;
-  const departments = Array.from(new Set(users.map(u => u.department)));
+  // Preview image state
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const resetForm = () => {
     setFormData({
@@ -69,9 +73,51 @@ export default function UsersPage() {
       department: "",
       location: "",
       phone: "",
-      status: "active"
+      profilePhoto: "",
     });
+    setImagePreview(null);
     setEditingId(null);
+  };
+
+  // Handle file selection
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file (JPEG, PNG, etc.)');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size should be less than 5MB');
+      return;
+    }
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setImagePreview(base64String);
+      setFormData(prev => ({ ...prev, profilePhoto: base64String }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Remove selected image
+  const removeImage = () => {
+    setImagePreview(null);
+    setFormData(prev => ({ ...prev, profilePhoto: "" }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // Trigger file input click
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
   };
 
   const handleSave = () => {
@@ -81,21 +127,24 @@ export default function UsersPage() {
     }
 
     if (editingId) {
-      // Update existing user
+      // Update existing user - Keep their existing status
       setUsers(users.map(user => 
         user.id === editingId 
           ? { 
               ...user, 
               ...formData,
-              id: editingId
+              id: editingId,
+              // Keep existing status when editing
+              status: users.find(u => u.id === editingId)?.status || "active"
             } 
           : user
       ));
     } else {
-      // Add new user
+      // Add new user - Set status to "active" by default
       const newUser: User = {
         id: Date.now(),
         ...formData,
+        status: "active", // All new members are active by default
         joinDate: new Date().toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'long',
@@ -118,8 +167,9 @@ export default function UsersPage() {
       department: user.department,
       location: user.location,
       phone: user.phone,
-      status: user.status
+      profilePhoto: user.profilePhoto || "",
     });
+    setImagePreview(user.profilePhoto || null);
     setShowModal(true);
   };
 
@@ -144,6 +194,29 @@ export default function UsersPage() {
     user.role.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Function to get initials from name
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  // Function to get avatar - uses photo or initials
+  const getUserAvatar = (user: User) => {
+    if (user.profilePhoto) {
+      return (
+        <img 
+          src={user.profilePhoto} 
+          alt={user.name}
+          className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+        />
+      );
+    }
+    return (
+      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+        {getInitials(user.name)}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <Container size="xl">
@@ -157,8 +230,8 @@ export default function UsersPage() {
               <div>
                 <Heading level={1}>Team Members</Heading>
                 <Text variant="muted">
-                  Manage {totalUsers} team members across {departments.length} departments
-                </Text>
+  Manage {users.length} team members across {Array.from(new Set(users.map(u => u.department))).length} departments
+</Text>
               </div>
             </div>
             
@@ -181,7 +254,7 @@ export default function UsersPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <Text size="sm" className="text-gray-600">Total Members</Text>
-                  <Heading level={2}>{totalUsers}</Heading>
+                  <Heading level={2}>{users.length}</Heading>
                 </div>
                 <div className="p-3 bg-blue-100 rounded-lg">
                   <FaUsers className="text-2xl text-blue-600" />
@@ -193,7 +266,7 @@ export default function UsersPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <Text size="sm" className="text-gray-600">Active</Text>
-                  <Heading level={2}>{activeUsers}</Heading>
+                  <Heading level={2}>{users.filter(u => u.status === "active").length}</Heading>
                 </div>
                 <div className="p-3 bg-green-100 rounded-lg">
                   <FaUserCheck className="text-2xl text-green-600" />
@@ -205,7 +278,7 @@ export default function UsersPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <Text size="sm" className="text-gray-600">Departments</Text>
-                  <Heading level={2}>{departments.length}</Heading>
+                  <Heading level={2}>{Array.from(new Set(users.map(u => u.department))).length}</Heading>
                 </div>
                 <div className="p-3 bg-orange-100 rounded-lg">
                   <FaBuilding className="text-2xl text-orange-600" />
@@ -217,7 +290,7 @@ export default function UsersPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <Text size="sm" className="text-gray-600">Inactive</Text>
-                  <Heading level={2}>{totalUsers - activeUsers}</Heading>
+                  <Heading level={2}>{users.filter(u => u.status === "inactive").length}</Heading>
                 </div>
                 <div className="p-3 bg-purple-100 rounded-lg">
                   <FaUserTimes className="text-2xl text-purple-600" />
@@ -261,7 +334,7 @@ export default function UsersPage() {
               All Team Members <Badge color="gray">{filteredUsers.length}</Badge>
             </Heading>
             <Text variant="muted">
-              Showing {filteredUsers.length} of {totalUsers} members
+              Showing {filteredUsers.length} of {users.length} members
             </Text>
           </div>
 
@@ -271,9 +344,8 @@ export default function UsersPage() {
                 <Card key={user.id} className="p-6 hover:shadow-lg transition-shadow group">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-  {user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-</div>
+                      {/* Avatar with photo */}
+                      {getUserAvatar(user)}
                       <div>
                         <Heading level={4} className="mb-1">
                           {user.name}
@@ -414,6 +486,62 @@ export default function UsersPage() {
             {/* Modal Body */}
             <div className="p-6">
               <div className="space-y-6">
+                {/* Profile Photo Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Profile Photo
+                  </label>
+                  <div className="flex items-center gap-6">
+                    {/* Photo Preview */}
+                    <div className="relative">
+                      {imagePreview ? (
+                        <>
+                          <img 
+                            src={imagePreview} 
+                            alt="Preview"
+                            className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                          />
+                          <button
+                            onClick={removeImage}
+                            className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                          >
+                            <FaTimesCircle size={16} />
+                          </button>
+                        </>
+                      ) : (
+                        <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center border-2 border-dashed border-gray-300">
+                          <FaUser size={32} className="text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Upload Controls */}
+                    <div className="flex-1">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileSelect}
+                        accept="image/*"
+                        className="hidden"
+                      />
+                      <div className="space-y-3">
+                        <Button
+                          type="button"
+                          onClick={triggerFileInput}
+                          variant="secondary"
+                          leftIcon={<FaUpload />}
+                          className="w-full"
+                        >
+                          Upload Photo
+                        </Button>
+                        <Text variant="muted" size="xs">
+                          Recommended: Square image, max 5MB. JPG, PNG, or WebP.
+                        </Text>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Name & Email */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
@@ -505,62 +633,6 @@ export default function UsersPage() {
                         className="w-full pl-10"
                       />
                     </div>
-                  </div>
-                </div>
-
-                {/* Status */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Status
-                  </label>
-                  <div className="flex gap-6">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        formData.status === "active" 
-                          ? "border-green-500 bg-green-500" 
-                          : "border-gray-300"
-                      }`}>
-                        {formData.status === "active" && (
-                          <div className="w-2 h-2 bg-white rounded-full"></div>
-                        )}
-                      </div>
-                      <div>
-                        <div className="font-medium">Active</div>
-                        <div className="text-sm text-gray-500">Member can access the system</div>
-                      </div>
-                      <input
-                        type="radio"
-                        name="status"
-                        value="active"
-                        checked={formData.status === "active"}
-                        onChange={() => setFormData({...formData, status: "active"})}
-                        className="hidden"
-                      />
-                    </label>
-
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        formData.status === "inactive" 
-                          ? "border-gray-500 bg-gray-500" 
-                          : "border-gray-300"
-                      }`}>
-                        {formData.status === "inactive" && (
-                          <div className="w-2 h-2 bg-white rounded-full"></div>
-                        )}
-                      </div>
-                      <div>
-                        <div className="font-medium">Inactive</div>
-                        <div className="text-sm text-gray-500">Member cannot access the system</div>
-                      </div>
-                      <input
-                        type="radio"
-                        name="status"
-                        value="inactive"
-                        checked={formData.status === "inactive"}
-                        onChange={() => setFormData({...formData, status: "inactive"})}
-                        className="hidden"
-                      />
-                    </label>
                   </div>
                 </div>
               </div>
