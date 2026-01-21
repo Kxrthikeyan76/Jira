@@ -59,11 +59,29 @@ export default function Sidebar() {
   };
 
   const navItems = [
+
     { label: "Dashboard", href: "/dashboard", icon: FiHome },
     { label: "Projects", href: "/projects", icon: FiFolder },
     { label: "Team Members", href: "/users", icon: FiUsers },
     { label: "Calendar", href: "/calendar", icon: FiCalendar },
     { label: "Reports", href: "/reports", icon: FiBarChart2 },
+
+    {
+      label: "Dashboard",
+      href: "/dashboard",
+      icon: FiHome,
+    },
+    {
+      label: "Projects",
+      href: "/projects",
+      icon: FiFolder,
+    },
+    {
+      label: "board",
+      href: "/board",
+      icon: FiFolder,
+    }
+
   ];
 
   const isActive = (href: string) => {
