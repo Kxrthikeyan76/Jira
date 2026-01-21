@@ -1,9 +1,17 @@
-import AppLayout from "@/components/layout/AppLayout";
+// app/(app)/layout.tsx
+import Sidebar from '@/components/layout/Sidebar';
 
-export default function AuthLayout({
+export default function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <AppLayout>{children}</AppLayout>;
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <main className="flex-1 overflow-y-auto h-screen p-4 md:p-6 lg:p-8">
+        {children}
+      </main>
+    </div>
+  );
 }
