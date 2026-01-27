@@ -16,7 +16,8 @@ import {
   FiFolder,
   FiCheckCircle,
   FiActivity,
-  FiAward
+  FiAward,
+  FiTrash2 // ADD THIS IMPORT
 } from "react-icons/fi";
 
 export default function UserProfilePage() {
@@ -47,6 +48,22 @@ export default function UserProfilePage() {
   }, [params.id, router]);
 
   const isOwnProfile = currentUser?.id === profileUser?.id;
+  
+  // ADD PERMISSION CHECK FUNCTIONS
+  const canEditUser = () => {
+    // User can edit own profile OR admin can edit anyone
+    return isOwnProfile || currentUser?.role === 'admin';
+  };
+
+  const canDeleteUser = () => {
+    // Only admin can delete users, and cannot delete themselves
+    return currentUser?.role === 'admin' && !isOwnProfile;
+  };
+
+  const canAssignTasks = () => {
+    // Admin and manager can assign tasks
+    return currentUser?.role === 'admin' || currentUser?.role === 'manager';
+  };
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -76,6 +93,18 @@ export default function UserProfilePage() {
   const handleChange = (field: keyof User, value: string | string[]) => {
     if (!editedUser) return;
     setEditedUser({ ...editedUser, [field]: value });
+  };
+
+  const handleDeleteUser = () => {
+    if (profileUser && canDeleteUser()) {
+      const confirmed = window.confirm(
+        `Are you sure you want to delete ${profileUser.name}? This action cannot be undone.`
+      );
+      if (confirmed) {
+        alert(`User ${profileUser.name} has been deleted.`);
+        router.push('/users');
+      }
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -176,7 +205,8 @@ export default function UserProfilePage() {
                       </div>
                     )}
                     
-                    {isEditing && (
+                    {/* ONLY SHOW CAMERA BUTTON IF USER CAN EDIT */}
+                    {isEditing && canEditUser() && (
                       <>
                         <input
                           type="file"
@@ -199,7 +229,7 @@ export default function UserProfilePage() {
                 
                 {/* Name & Role - Editable */}
                 <div>
-                  {isEditing ? (
+                  {isEditing && canEditUser() ? (
                     <div className="space-y-3">
                       <input
                         type="text"
@@ -229,8 +259,8 @@ export default function UserProfilePage() {
                 </div>
               </div>
               
-              {/* Edit/Save/Cancel Buttons */}
-              {isOwnProfile && (
+              {/* Edit/Save/Cancel Buttons - WITH PERMISSION CHECK */}
+              {canEditUser() && (
                 <div className="flex gap-2">
                   {isEditing ? (
                     <>
@@ -278,7 +308,16 @@ export default function UserProfilePage() {
                 </div>
               </div>
               
-              
+              {/* Delete Button - ONLY FOR ADMIN AND NOT OWN PROFILE */}
+              {canDeleteUser() && (
+                <button
+                  onClick={handleDeleteUser}
+                  className="px-4 py-2 bg-red-600 text-white rounded text-sm font-medium hover:bg-red-700 flex items-center gap-2"
+                >
+                  <FiTrash2 className="w-4 h-4" />
+                  <span>Delete User</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -297,7 +336,7 @@ export default function UserProfilePage() {
               <div className="space-y-4">
                 <div>
                   <div className="text-sm text-gray-500 mb-2">Department</div>
-                  {isEditing ? (
+                  {isEditing && canEditUser() ? (
                     <input
                       type="text"
                       value={editedUser.department}
@@ -312,7 +351,7 @@ export default function UserProfilePage() {
                 
                 <div>
                   <div className="text-sm text-gray-500 mb-2">Location</div>
-                  {isEditing ? (
+                  {isEditing && canEditUser() ? (
                     <input
                       type="text"
                       value={editedUser.location}
@@ -415,21 +454,26 @@ export default function UserProfilePage() {
               </div>
             </div>
 
-            {/* Work Actions Card */}
+            {/* Work Actions Card - WITH PERMISSION CHECKS */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Work Actions</h2>
               
               <div className="space-y-3">
-                <button className="w-full px-4 py-3 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2">
-                  <FiCheckCircle className="w-4 h-4" />
-                  <span>Assign New Task</span>
-                </button>
+                {/* Assign New Task - Only for admin and manager */}
+                {canAssignTasks() && (
+                  <button className="w-full px-4 py-3 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                    <FiCheckCircle className="w-4 h-4" />
+                    <span>Assign New Task</span>
+                  </button>
+                )}
                 
+                {/* View Project History - Available for everyone */}
                 <button className="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded text-sm font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2">
                   <FiFolder className="w-4 h-4" />
                   <span>View Project History</span>
                 </button>
                 
+                {/* View Work Reports - Available for everyone */}
                 <button className="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded text-sm font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2">
                   <FiActivity className="w-4 h-4" />
                   <span>View Work Reports</span>

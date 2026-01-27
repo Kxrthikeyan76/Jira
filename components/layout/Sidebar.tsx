@@ -1,226 +1,261 @@
-// components/layout/Sidebar.tsx
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
-  FiHome, 
-  FiFolder, 
-  FiUsers,
-  FiCalendar,
-  FiBarChart2,
-  FiLogOut,
-  FiUser,
-  FiMenu,
-  FiChevronLeft,
-  FiChevronRight
-} from "react-icons/fi";
+  FaUsers, 
+  FaChartBar, 
+  FaCog,
+  FaSignOutAlt,
+  FaUserShield,
+  FaUserTie,
+  FaUser,
+  FaEye,
+  FaProjectDiagram,
+  FaTachometerAlt,
+  FaChevronLeft,
+  FaChevronRight
+} from 'react-icons/fa';
+import { useEffect, useState, useMemo } from 'react';
 
-type User = {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
+type NavItem = {
+  path: string;
+  label: string;
+  icon: React.ReactNode;
+  roles: string[];
 };
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [isOpen, setIsOpen] = useState(true); // ALWAYS start as open
+  const [user, setUser] = useState<any>(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // On mount, ONLY check for user, NOT sidebar state
   useEffect(() => {
-    const storedUser = localStorage.getItem('currentUser');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const userData = sessionStorage.getItem('currentUser');
+    if (userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error('Error parsing user:', error);
+      }
     }
-    
-    // IGNORE any stored sidebar state - ALWAYS open on refresh
-    // setIsOpen(true); // Already true by default
-    
-    // If you want to clear any previous stored state:
-    localStorage.removeItem('sidebarOpen');
   }, []);
 
-  // Save sidebar state to localStorage when user changes it
-  const toggleSidebar = () => {
-    const newState = !isOpen;
-    setIsOpen(newState);
-    localStorage.setItem('sidebarOpen', newState.toString());
-  };
-
   const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('sidebarOpen');
+    document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    sessionStorage.removeItem('currentUser');
+    localStorage.removeItem('currentUserEmail');
     router.push('/login');
   };
 
-  const navItems = [
-
-    { label: "Dashboard", href: "/dashboard", icon: FiHome },
-    { label: "Projects", href: "/projects", icon: FiFolder },
-    { label: "Team Members", href: "/users", icon: FiUsers },
-    { label: "Calendar", href: "/calendar", icon: FiCalendar },
-    { label: "Reports", href: "/reports", icon: FiBarChart2 },
-
-    {
-      label: "Dashboard",
-      href: "/dashboard",
-      icon: FiHome,
+  const navItems: NavItem[] = useMemo(() => [
+    { 
+      path: '/dashboard', 
+      label: 'Dashboard', 
+      icon: <FaTachometerAlt />, 
+      roles: ['admin', 'manager', 'user', 'viewer']
     },
-    {
-      label: "Projects",
-      href: "/projects",
-      icon: FiFolder,
+    { 
+      path: '/users', 
+      label: 'Users', 
+      icon: <FaUsers />, 
+      roles: ['admin', 'manager', 'user', 'viewer']
     },
-    {
-      label: "board",
-      href: "/board",
-      icon: FiFolder,
+    { 
+      path: '/projects', 
+      label: 'Projects', 
+      icon: <FaProjectDiagram />, 
+      roles: ['admin', 'manager', 'user', 'viewer']
+    },
+    { 
+      path: '/reports', 
+      label: 'Reports', 
+      icon: <FaChartBar />, 
+      roles: ['admin', 'manager']
+    },
+    { 
+      path: '/settings', 
+      label: 'Settings', 
+      icon: <FaCog />, 
+      roles: ['admin']
+    },
+  ], []);
+
+  const getRoleIcon = (role: string) => {
+    switch(role) {
+      case 'admin': return <FaUserShield className="text-red-500" />;
+      case 'manager': return <FaUserTie className="text-blue-500" />;
+      case 'user': return <FaUser className="text-green-500" />;
+      case 'viewer': return <FaEye className="text-gray-500" />;
+      default: return <FaUser />;
     }
-
-  ];
-
-  const isActive = (href: string) => {
-    return pathname === href || pathname?.startsWith(`${href}/`);
   };
 
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  const filteredNavItems = useMemo(() => {
+    if (!user) return [];
+    return navItems.filter(item => item.roles.includes(user.role || 'user'));
+  }, [user, navItems]);
+
+  const toggleSidebar = () => {
+    setIsCollapsed(!isCollapsed);
   };
+
+  // Prevent scroll propagation to parent
+  const handleScroll = (e: React.WheelEvent) => {
+    e.stopPropagation();
+    const element = e.currentTarget;
+    const isAtTop = element.scrollTop === 0;
+    const isAtBottom = element.scrollHeight - element.scrollTop === element.clientHeight;
+    
+    // Only prevent default if we can still scroll in the current direction
+    if ((e.deltaY < 0 && !isAtTop) || (e.deltaY > 0 && !isAtBottom)) {
+      e.preventDefault();
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className={`${isCollapsed ? 'w-16' : 'w-64'} h-full bg-white border-r transition-all duration-300`}>
+        <div className="animate-pulse h-full">
+          <div className="h-16 bg-gray-200"></div>
+          <div className="p-4 space-y-2">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-10 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <>
-      {/* When sidebar is OPEN */}
-      {isOpen ? (
-        <div className="flex flex-col bg-white border-r border-gray-200 h-screen w-64 transition-all duration-300">
-          {/* Header */}
-          <div className="p-6 border-b flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">TrackFlow</h1>
-              <p className="text-gray-500 text-sm">Project Management</p>
+    <div className={`${isCollapsed ? 'w-16' : 'w-64'} h-full flex flex-col bg-white border-r transition-all duration-300 relative`}>
+      {/* Fixed Header */}
+      <div className="h-16 border-b flex items-center justify-between px-4 flex-shrink-0">
+        {!isCollapsed ? (
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-600 from-blue-600 to-purple-600 flex items-center justify-center">
+              <span className="text-xl font-bold text-white">TF</span>
             </div>
-            <button
-              onClick={toggleSidebar}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
-              title="Close sidebar"
-            >
-              <FiChevronLeft className="w-5 h-5" />
-            </button>
+            <span className="font-bold text-gray-800 whitespace-nowrap">TrackFlow</span>
           </div>
+        ) : (
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center mx-auto">
+            <span className="text-xl font-bold text-white">TF</span>
+          </div>
+        )}
+      </div>
 
-          {/* Navigation with separate scrollbar */}
-          <div className="flex-1 p-4 overflow-y-auto">
+      {/* Toggle Button */}
+      <div className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2 z-10">
+        <button
+          onClick={toggleSidebar}
+          className="p-2 rounded-full bg-white border shadow-md hover:bg-gray-50 transition-colors"
+          title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {isCollapsed ? (
+            <FaChevronRight className="text-gray-600" />
+          ) : (
+            <FaChevronLeft className="text-gray-600" />
+          )}
+        </button>
+      </div>
+
+      {/* Scrollable Content Area - with scroll isolation */}
+      <div 
+        className="flex-1 overflow-y-auto"
+        onWheel={handleScroll}
+        style={{ overscrollBehavior: 'contain' }}
+      >
+        <div className="py-4">
+          {/* Navigation Section */}
+          <div className="mb-2 px-4">
+            {!isCollapsed && (
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                Main Menu
+              </h3>
+            )}
             <nav className="space-y-1">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.href);
+              {filteredNavItems.map((item) => {
+                const isActive = pathname === item.path || pathname?.startsWith(`${item.path}/`);
                 
                 return (
                   <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium ${
-                      active 
-                        ? "bg-blue-50 text-blue-700" 
-                        : "text-gray-700 hover:bg-gray-50"
+                    key={item.path}
+                    href={item.path}
+                    className={`flex items-center ${isCollapsed ? 'justify-center' : ''} gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                      isActive
+                        ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-600 font-medium border-l-3 border-blue-500'
+                        : 'text-gray-700 hover:bg-gray-50 border-l-3 border-transparent'
                     }`}
+                    title={isCollapsed ? item.label : ''}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span>{item.label}</span>
+                    <span className={`text-lg ${isActive ? 'text-blue-500' : 'text-gray-500'}`}>
+                      {item.icon}
+                    </span>
+                    {!isCollapsed && (
+                      <span className="text-sm whitespace-nowrap">{item.label}</span>
+                    )}
                   </Link>
                 );
               })}
             </nav>
+          </div>
+        </div>
+      </div>
 
-            <div className="mt-8">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3">
-                Quick Stats
-              </h3>
-              <div className="space-y-2 px-3">
-                <div className="text-sm text-gray-600">
-                  <div className="flex justify-between items-center py-1">
-                    <span>Active Projects</span>
-                    <span className="font-semibold">12</span>
-                  </div>
-                  <div className="flex justify-between items-center py-1">
-                    <span>Team Members</span>
-                    <span className="font-semibold">8</span>
-                  </div>
-                  <div className="flex justify-between items-center py-1">
-                    <span>Tasks Today</span>
-                    <span className="font-semibold">24</span>
-                  </div>
+      {/* Fixed Footer */}
+      <div className="border-t bg-white flex-shrink-0">
+        {!isCollapsed ? (
+          <>
+            {/* Role info - Full version */}
+            <div className="p-3 border-b">
+              <div className="flex items-center gap-2">
+                {getRoleIcon(user.role || 'user')}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-gray-700 truncate">
+                    {user.name || user.email}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {user.role?.charAt(0).toUpperCase() + user.role?.slice(1)}
+                  </p>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* User Profile */}
-          <div className="p-4 border-t">
-            {user ? (
-              <>
-                <Link
-                  href={`/users/${user.id}`}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50"
-                >
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                    {getInitials(user.name)}
-                  </div>
-                  <div>
-                    <div className="font-medium text-sm text-gray-900">{user.name}</div>
-                    <div className="text-xs text-gray-500">{user.role}</div>
-                  </div>
-                </Link>
-                
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-600 w-full mt-2"
-                >
-                  <FiLogOut className="w-5 h-5" />
-                  <span className="text-sm font-medium">Logout</span>
-                </button>
-              </>
-            ) : (
-              <Link
-                href="/login"
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50"
-              >
-                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                  <FiUser className="w-5 h-5 text-gray-500" />
-                </div>
-                <div>
-                  <div className="font-medium text-sm">Not logged in</div>
-                  <div className="text-xs text-gray-500">Click to login</div>
-                </div>
-              </Link>
-            )}
-          </div>
-        </div>
-      ) : (
-        /* When sidebar is CLOSED - COMPLETELY HIDDEN except toggle button */
-        <div className="h-screen flex items-center justify-center border-r border-gray-200 bg-white w-16">
-          <button
-            onClick={toggleSidebar}
-            className="p-3 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
-            title="Open sidebar"
-          >
-            <FiChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-      )}
+            {/* Logout button */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 w-full transition-colors"
+            >
+              <FaSignOutAlt />
+              <span className="text-sm">Logout</span>
+            </button>
+          </>
+        ) : (
+          // Collapsed version - Only icons
+          <>
+            {/* Role info - Icon only */}
+            <div className="p-3 border-b flex justify-center">
+              <div title={`${user.name || user.email} (${user.role})`}>
+                {getRoleIcon(user.role || 'user')}
+              </div>
+            </div>
 
-      {/* Mobile Menu Button - Always visible on mobile */}
-      <button
-        onClick={toggleSidebar}
-        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-lg shadow-lg"
-        title="Toggle sidebar"
-      >
-        <FiMenu className="w-5 h-5" />
-      </button>
-    </>
+            {/* Logout button - Icon only */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center justify-center p-3 text-gray-700 hover:bg-red-50 hover:text-red-600 w-full transition-colors"
+              title="Logout"
+            >
+              <FaSignOutAlt />
+            </button>
+          </>
+        )}
+      </div>
+    </div>
   );
 }

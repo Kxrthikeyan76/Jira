@@ -1,5 +1,7 @@
 // app/(app)/layout.tsx
-import Sidebar from '@/components/layout/Sidebar';
+"use client";
+
+import Sidebar from "@/components/layout/Sidebar";
 
 export default function AppLayout({
   children,
@@ -7,9 +9,12 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* Sidebar - Now has toggle functionality */}
       <Sidebar />
-      <main className="flex-1 overflow-y-auto h-screen p-4 md:p-6 lg:p-8">
+      
+      {/* Main content - Will adjust automatically */}
+      <main className="flex-1 h-screen overflow-y-auto">
         {children}
       </main>
     </div>

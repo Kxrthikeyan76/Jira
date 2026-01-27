@@ -1,35 +1,38 @@
-"use client";
+// Badge.tsx
+import React from 'react';
 
-import { ReactNode } from "react";
-import clsx from "clsx";
-
-type BadgeProps = {
-  children: ReactNode;
-  color?: "blue" | "green" | "red" | "purple" | "orange" | "gray";
+interface BadgeProps {
+  children: React.ReactNode;
+  color?: 'blue' | 'green' | 'red' | 'yellow' | 'gray' | 'purple';
+  size?: 'sm' | 'md';
   className?: string;
-};
+}
 
-export default function Badge({ 
-  children, 
-  color = "blue",
-  className 
-}: BadgeProps) {
+const Badge: React.FC<BadgeProps> = ({
+  children,
+  color = 'gray',
+  size = 'md',
+  className = '',
+}) => {
   const colorClasses = {
-    blue: "bg-blue-100 text-blue-700",
-    green: "bg-green-100 text-green-700",
-    red: "bg-red-100 text-red-700",
-    purple: "bg-purple-100 text-purple-700",
-    orange: "bg-orange-100 text-orange-700",
-    gray: "bg-gray-100 text-gray-700",
+    blue: 'bg-blue-100 text-blue-800',
+    green: 'bg-green-100 text-green-800',
+    red: 'bg-red-100 text-red-800',
+    yellow: 'bg-yellow-100 text-yellow-800',
+    gray: 'bg-gray-100 text-gray-800',
+    purple: 'bg-purple-100 text-purple-800'
   };
-
+  
+  const sizeClasses = {
+    sm: 'px-2 py-0.5 text-xs',
+    md: 'px-2.5 py-0.5 text-sm'
+  };
+  
   return (
-    <span className={clsx(
-      "px-3 py-1 text-xs font-semibold rounded-full",
-      colorClasses[color],
-      className
-    )}>
+    <span className={`inline-flex items-center rounded-full font-medium ${colorClasses[color]} ${sizeClasses[size]} ${className}`}>
       {children}
     </span>
   );
-}
+};
+
+export default Badge;
