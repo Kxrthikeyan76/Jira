@@ -15,7 +15,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
   };
 
   return (
-    <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4">
+    <header className="h-14 flex-shrink-0 bg-white border-b border-gray-200 flex items-center justify-between px-4">
       
       {/* Left: Menu + App Name */}
       <div className="flex items-center">

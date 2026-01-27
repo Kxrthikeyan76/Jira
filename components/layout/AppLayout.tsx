@@ -1,26 +1,43 @@
 "use client";
 
 import { useState } from "react";
-import Header from "./Header";
-import Sidebar from "./Sidebar";
+import Sidebar from "@/components/layout/Sidebar";
+import Header from "@/components/layout/Header";
 
-export default function AppLayout({
-  children,
-}: {
+type AppLayoutProps = {
   children: React.ReactNode;
-}) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+};
+
+export default function AppLayout({ children }: AppLayoutProps) {
+  const [isOpen, setIsOpen] = useState(true);
+
+  const toggleSidebar = () => {
+    setIsOpen((prev) => !prev);
+  };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex min-h-screen w-full">
       {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} />
+      <Sidebar isOpen={isOpen} />
 
-      {/* Main Content */}
-      <div className="flex flex-col flex-1">
-        <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+      {/* Right side: Header + Page */}
+      <div className="flex flex-col flex-1 min-w-0">
+        {/* Header */}
+        <Header onMenuClick={toggleSidebar} />
 
-        <main className="flex-1 p-6 overflow-y-auto">
+        {/* Page content area */}
+        <main
+          className="
+            flex-1 
+            min-w-0 
+            overflow-x-hidden 
+            overflow-y-auto 
+            
+            flex 
+            flex-col 
+            pb-20
+          "
+        >
           {children}
         </main>
       </div>
